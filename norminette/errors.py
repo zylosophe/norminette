@@ -172,13 +172,24 @@ class _formatter:
 
 class HumanizedErrorsFormatter(_formatter):
     def __str__(self) -> str:
+
+        def colorize(status: Literal["OK", "Error", "Notice"], txt: str) -> str:
+            return "\033[9" + (
+                "1" if status == "Error" else (
+                    "2" if status == "OK" else "3"
+                )) + "m" + txt + "\033[0m"
+
         output = ''
         for file in self.files:
-            output += f"{file.basename}: {file.errors.status}!"
+            status = file.errors.status
+            output += colorize(status, f"[{'OK' if status == 'OK' else 'KO'}]")
+            output += f" {file.basename}"
             for error in file.errors:
                 highlight = error.highlights[0]
-                output += f"\n{error.level}: {error.name:<20} "
-                output += f"(line: {highlight.lineno:>3}, col: {highlight.column:>3}):\t{error.text}"
+                error_output = ""
+                error_output += f"\n{error.level}: {error.name:<20} "
+                error_output += f"(line: {highlight.lineno:>3}, col: {highlight.column:>3}):\t{error.text}"
+                output += colorize(error.level, error_output)
             output += '\n'
         return output
 
