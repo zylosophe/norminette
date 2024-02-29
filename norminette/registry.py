@@ -48,6 +48,13 @@ class Registry:
         Each secondary rule is then run in arbitrary order based on their
         dependencies
         """
+
+        def colorize(status, txt: str) -> str:
+            return "\033[9" + (
+                "1" if status == "Error" else (
+                    "2" if status == "OK" else "3"
+                )) + "m" + txt + "\033[0m"
+
         unrecognized_tkns = []
         context.state = "starting"
         for rule in self.dependencies["_start"]:
@@ -86,16 +93,18 @@ class Registry:
             if context.debug > 0:
                 print("uncaught ->", unrecognized_tkns)
         if context.errors == []:
-            print(context.filename + ": OK!")
+            print(colorize("OK", "[OK]") + " " + context.filename)
             for warning in sorted(context.warnings, key=cmp_to_key(sort_errs)):
-                print(warning)
+                print(colorize("Notice", str(warning)))
         else:
-            print(context.filename + ": Error!")
+            print(colorize("Error", "[KO]") + " " + context.filename)
             context.errors = sorted(
                 context.errors + context.warnings, key=cmp_to_key(sort_errs)
             )
             for err in context.errors:
-                print(err)
+                print(colorize(
+					"Notice" if str(err).startswith("Notice:") else "Error",
+					str(err)))
             # context.warnings = sorted(context.warnings, key=cmp_to_key(sort_errs))
             # for warn in context.warnings:
             #     print (warn)
